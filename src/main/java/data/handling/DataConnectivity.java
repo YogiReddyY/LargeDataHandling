@@ -1,10 +1,7 @@
 package data.handling;
 
 import java.sql.SQLException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 /**
@@ -16,15 +13,13 @@ public class DataConnectivity {
 
     public static void main(String[] args) throws SQLException, ExecutionException, InterruptedException {
         long startTime = System.nanoTime();
-        ExecutorService executorService = Executors.newFixedThreadPool(800);
-        DataRetrieveCallable dataRetrieveCallable = new DataRetrieveCallable();
-        Future<String> future = executorService.submit(dataRetrieveCallable);
-        String res = future.get();
+        ExecutorService executor = Executors.newFixedThreadPool(800);
+        DataRetrieveRunnable dataRetrieveCallable = new DataRetrieveRunnable();
+        executor.execute(dataRetrieveCallable);
         long execEndTime = System.nanoTime();
-        LOGGER.info("Process Completed" + res);
         long elapsedTimeExec = execEndTime - startTime;
         LOGGER.info("Processed time in milliseconds : " +
                 elapsedTimeExec / 1000000);
-        executorService.shutdown();
+        executor.shutdown();
     }
 }
