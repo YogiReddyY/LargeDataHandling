@@ -4,16 +4,13 @@ import java.sql.SQLException;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
 
-/**
- * Created by yyeruva on 03-03-2019.
- */
 public class DataConnectivity {
 
     private static final Logger LOGGER = Logger.getLogger(DataConnectivity.class.getName());
 
     public static void main(String[] args) throws SQLException, ExecutionException, InterruptedException {
         long startTime = System.nanoTime();
-        ExecutorService executor = Executors.newFixedThreadPool(800);
+        ExecutorService executor = Executors.newFixedThreadPool(1);
         DataRetrieveRunnable dataRetrieveCallable = new DataRetrieveRunnable();
         executor.execute(dataRetrieveCallable);
         long execEndTime = System.nanoTime();

@@ -11,13 +11,8 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Created by yyeruva on 03-03-2019.
- */
-
 public class DataRetrieveRunnable implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(DataRetrieveRunnable.class.getName());
-    String result;
 
     @Override
     public void run()  {
@@ -27,16 +22,16 @@ public class DataRetrieveRunnable implements Runnable {
             LOGGER.info("Connected to PostgresSQL database!" + connection.getMetaData());
             preparedStatement = connection.prepareStatement("select id,first_name,middle_name,last_name,client_name,org_name,org_id,manager_name,lead_name,\n" +
                     "pin,city,country,LongLong\n" +
-                    "from test.user limit 1000000");
+                    "from test.user limit 1000100");
             preparedStatement.setFetchSize(10000);
             retrieveData(preparedStatement);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Connection failure.", e);
+            LOGGER.log(Level.SEVERE, "Postgres Connection Failure.", e);
         } finally {
             try {
                 preparedStatement.close();
             } catch (SQLException e) {
-                LOGGER.log(Level.SEVERE, "Connection failure.", e);
+                LOGGER.log(Level.SEVERE, "Closing Prepared Statement Failed :", e);
             }
         }
     }
@@ -47,9 +42,9 @@ public class DataRetrieveRunnable implements Runnable {
             resultSet = preparedStatement.executeQuery();
             writeToCSV(resultSet);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Connection failure.", e);
+            LOGGER.log(Level.SEVERE, "Execute Query Failure", e);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "CSV File Not accessible", e);
+            LOGGER.log(Level.SEVERE, "Failed to Open or Create the file", e);
         } finally {
             resultSet.close();
         }
@@ -72,7 +67,7 @@ public class DataRetrieveRunnable implements Runnable {
             LOGGER.info("CSV Writing  time in milliseconds : " +
                     elapsedTime / 1000000);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "IO Exception", e);
+            LOGGER.log(Level.SEVERE, "Failed to Open or Create the file", e);
         } finally {
             writer.close();
         }
