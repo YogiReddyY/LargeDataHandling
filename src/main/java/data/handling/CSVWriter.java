@@ -24,9 +24,9 @@ public class CSVWriter {
             LOGGER.info("\t\t\t\t\t\t\tCSV Writing  time in milliseconds : " +
                     elapsedTime / 1000000);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "IO Exception", e);
+            LOGGER.log(Level.SEVERE, "Failed to Open or Create the file", e);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "SQLException", e);
+            LOGGER.log(Level.SEVERE, "Connection failure..", e);
         }
         stringWriter.flush();
         return stringWriter;

@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-    private static final int PAGE_SIZE = 10000;
-    private static final int THREAD_COUNT = 100;
+    private static final int PAGE_SIZE = 250025;
+    private static final int THREAD_COUNT = 4;
 
     public static void main(String[] args) throws SQLException, ExecutionException, InterruptedException {
         long startTime = System.nanoTime();
@@ -33,16 +33,45 @@ public class Main {
 
         final Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/test", "postgres", "admin");
 
+
         submitTask(executor, preparedStatement, taskList, csvWriter, connection);
-        int taskSize = taskList.size();
-        awaitCompletion(taskList);
-        writeCSVFile(taskList, taskSize);
+        //waitAndWriteCSVInOrder(taskList);
+       greedyWriteCSV(taskList);
         printEndTiming(startTime);
         executor.shutdown();
         connection.close();
     }
 
-    private static void writeCSVFile(List<Future<String>> taskList, int taskSize) throws InterruptedException, ExecutionException {
+    private static void waitAndWriteCSVInOrder(List<Future<String>> taskList) throws ExecutionException, InterruptedException {
+        awaitCompletionAll(taskList);
+        writeCSVFile(taskList);
+    }
+
+    private static void greedyWriteCSV(List<Future<String>> taskList) throws ExecutionException, InterruptedException {
+        File file = new File("C:\\\\Users\\\\yyeruva\\\\Desktop\\\\Assignment\\\\sample.csv");
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            while(!taskList.isEmpty()) {
+                for (int task = 0; task < taskList.size(); task++) {
+                    final Future<String> completedTask = taskList.get(task);
+                    if (completedTask.isDone()) {
+                        fileWriter.write(completedTask.get());
+                        taskList.remove(task);
+                    }
+                }
+                try {
+                    LOGGER.info("Sleeping for 3 seconds");
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, "Current Thread Was Interrupted", e);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Failed to Open or Create the file", e);
+
+        }
+    }
+    private static void writeCSVFile(List<Future<String>> taskList) throws InterruptedException, ExecutionException {
+        final int taskSize = taskList.size();
         File file = new File("C:\\\\Users\\\\yyeruva\\\\Desktop\\\\Assignment\\\\sample.csv");
         try (FileWriter fileWriter = new FileWriter(file)) {
             for (int task = 0; task < taskSize; task++) {
@@ -50,7 +79,7 @@ public class Main {
                 fileWriter.write(completedTask.get());
             }
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "IOException", e);
+            LOGGER.log(Level.SEVERE, "Failed to Open or Create the file", e);
 
         }
     }
@@ -81,7 +110,7 @@ public class Main {
         }
     }
 
-    private static void awaitCompletion(List<Future<String>> taskList) {
+    private static void awaitCompletionAll(List<Future<String>> taskList) {
         int threadCounter = 0;
         int taskSize = taskList.size();
         while (true) {
@@ -98,7 +127,7 @@ public class Main {
                 LOGGER.info("Sleeping for 3 seconds");
                 Thread.sleep(3000);
             } catch (InterruptedException e) {
-                LOGGER.log(Level.SEVERE, "InterruptedException", e);
+                LOGGER.log(Level.SEVERE, "Current Thread Was Interrupted", e);
             }
         }
     }

@@ -41,7 +41,7 @@ public class SQLQuery implements Callable<String> {
             resultSet = preparedStatement.executeQuery();
             csv = csvWriter.format(resultSet, headers);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Connection failure.", e);
+            LOGGER.log(Level.SEVERE, "Connection failure", e);
         } finally {
             if (null != resultSet) {
                 resultSet.close();
