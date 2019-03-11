@@ -11,6 +11,8 @@ import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static java.nio.file.Files.newBufferedWriter;
+
 public class DataRetrieveRunnable implements Runnable {
     private static final Logger LOGGER = Logger.getLogger(DataRetrieveRunnable.class.getName());
 
@@ -55,7 +57,7 @@ public class DataRetrieveRunnable implements Runnable {
         long startTime = System.nanoTime();
         BufferedWriter writer = null;
         try {
-            writer = Files.newBufferedWriter(Paths.get(SAMPLE_CSV_FILE));
+            writer = newBufferedWriter(Paths.get(SAMPLE_CSV_FILE));
             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT
                     .withHeader("ID", "FirstName", "MiddleName", "LastName", "clientName", "OrgName", "OrgId", "ManagerName", "LeadName", "pin", "city", "country", "longLat"));
 
