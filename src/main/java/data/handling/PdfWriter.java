@@ -8,21 +8,30 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.logging.Logger;
 
 
-public class WriteToPdf implements Callable<String> {
-    @Override
-    public String call() throws Exception {
+public class PdfWriter {
+    private static final Logger LOGGER = Logger.getLogger(PdfWriter.class.getName());
+    private final String prefix;
+    private final String folderPath;
+
+    public PdfWriter(String prefix, String folderPath) {
+        this.prefix = prefix;
+        this.folderPath = folderPath;
+    }
+
+
+    private void print(StreamSource xmlSource, int pageNumber) throws Exception {
         File xsltFile = new File("template.xsl");
-        StreamSource xmlSource = new StreamSource(new File("users.xml"));
+        //StreamSource xmlSource = new StreamSource(new File("users.xml"));
         FopFactory fopFactory = FopFactory.newInstance(new File(".").toURI());
         FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
-        Fop fop = createfopFactory(fopFactory, foUserAgent, new FileOutputStream("users.pdf"));
+        Fop fop = createfopFactory(fopFactory, foUserAgent, new FileOutputStream(folderPath+File.separator+prefix+pageNumber+".pdf"));
         Transformer transformer = setUpXSLT(xsltFile);
         Result res = new SAXResult(fop.getDefaultHandler());
         generatePDF(xmlSource, transformer, res);
-        return "";
     }
 
     private static Fop createfopFactory(FopFactory fopFactory, FOUserAgent foUserAgent, OutputStream out) throws FOPException {
@@ -38,4 +47,9 @@ public class WriteToPdf implements Callable<String> {
         transformer.transform(xmlSource, res);
     }
 
+    public void print(List<List<String>> rows, int pageNumber) {
+       //FIXME : Yyeruva : convert rows into xml stream
+
+        // print( xmlSource,  pageNumber);  Invoke print
+    }
 }
