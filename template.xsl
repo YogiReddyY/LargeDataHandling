@@ -75,7 +75,7 @@
                                 </fo:table-row>
                             </fo:table-header>
                             <fo:table-body>
-                                <xsl:apply-templates select="Results/Row" />
+                                <xsl:apply-templates select="data/row" />
                             </fo:table-body>
                         </fo:table>
                     </fo:block>
@@ -83,7 +83,7 @@
             </fo:page-sequence>
         </fo:root>
     </xsl:template>
-    <xsl:template match="Results/Row">
+    <xsl:template match="data/row">
         <fo:table-row>
             <fo:table-cell border="solid .5px black"
                            text-align="center" wrap-option="wrap">

@@ -19,8 +19,8 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-    private static final int PAGE_SIZE = 250025;
-    private static int threadCount = 4;
+    private static final int PAGE_SIZE = 100;
+    private static int threadCount = 1;
     private static int pageSize;
     private static final int REC_PER_PAGE = 30;
     private static int pageCount;
@@ -35,7 +35,7 @@ public class Main {
         List<Future<String>> taskList = new ArrayList<>();
         //CSVWriter csvWriter = new CSVWriter();
         //FIXME  : YYERUVA GIVE ME CORRECT PREFIX AND FOLDER PATH
-        PdfWriter pdfWriter = new PdfWriter("","");
+        PdfWriter pdfWriter = new PdfWriter("Data","C:\\tmp");
         final Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/test", "postgres", "admin");
         int recordsCount = getRecordsCount(connection);
         LOGGER.info("Records Count"+ recordsCount);
@@ -50,7 +50,7 @@ public class Main {
         //FIXME : yyeruva : call merge all the resulted pdf files
         printEndTiming(startTime);
         executor.shutdown();
-        connection.close();
+        //connection.close();
     }
 
     private static void waitAndWriteCSVInOrder(List<Future<String>> taskList) throws ExecutionException, InterruptedException {
