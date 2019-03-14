@@ -1,59 +1,73 @@
 package data.handling;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import com.thoughtworks.xstream.io.xml.DomDriver;
 import org.apache.fop.apps.*;
 
 import javax.xml.transform.*;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 
 
-public class PdfWriter {
+public class PdfWriter extends Thread{
     private static final Logger LOGGER = Logger.getLogger(PdfWriter.class.getName());
     private final String prefix;
     private final String folderPath;
+    private List<Map<String, Object>> rows;
+    private int pageNumber;
 
     public PdfWriter(String prefix, String folderPath) {
         this.prefix = prefix;
         this.folderPath = folderPath;
     }
 
-
-    public void print(StreamSource xmlSource, int pageNumber) throws Exception {
+    private void print(StreamSource xmlSource, int pageNumber) throws Exception {
         File xsltFile = new File("template.xsl");
-        //StreamSource xmlSource = new StreamSource(new File("users.xml"));
         FopFactory fopFactory = FopFactory.newInstance(new File(".").toURI());
         FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
         Fop fop = createfopFactory(fopFactory, foUserAgent, new FileOutputStream(folderPath + File.separator + prefix + pageNumber + ".pdf"));
+
         Transformer transformer = setUpXSLT(xsltFile);
         Result res = new SAXResult(fop.getDefaultHandler());
         generatePDF(xmlSource, transformer, res);
     }
 
-    private static Fop createfopFactory(FopFactory fopFactory, FOUserAgent foUserAgent, OutputStream out) throws FOPException {
+    private Fop createfopFactory(FopFactory fopFactory, FOUserAgent foUserAgent, OutputStream out) throws FOPException {
         return fopFactory.newFop(MimeConstants.MIME_PDF, foUserAgent, out);
     }
 
-    private static Transformer setUpXSLT(File xsltFile) throws TransformerConfigurationException {
+    private Transformer setUpXSLT(File xsltFile) throws TransformerConfigurationException {
         TransformerFactory factory = TransformerFactory.newInstance();
         return factory.newTransformer(new StreamSource(xsltFile));
     }
 
-    private static void generatePDF(StreamSource xmlSource, Transformer transformer, Result res) throws TransformerException {
+    private void generatePDF(StreamSource xmlSource, Transformer transformer, Result res) throws TransformerException {
         transformer.transform(xmlSource, res);
     }
 
-    public void print(List<List<String>> rows, int pageNumber) {
-        XStream xStream = new XStream();
-        xStream.alias("row", String.class);
-        xStream.alias("data", Data.class);
-        xStream.addImplicitCollection(Data.class, "stringList");
-        Data data = new Data(rows.get(0));         //FIXME : Yyeruva : send each and every row, Create a new Thread?
+    public void print() {
+        XStream xStream = new XStream(new DomDriver());
+        xStream.registerConverter(new MapEntryConverter());
+        xStream.alias("map", java.util.Map.class);
         OutputStream streamSource = new ByteArrayOutputStream();
-        xStream.toXML(data, streamSource);
+        List<Columns> columnsList = new LinkedList<>();
+        for(int i =0 ; i<rows.size(); i++){
+            Map map = rows.get(i);
+            Columns columns= new Columns(
+            map.get("id"),map.get("first_name"),map.get("middle_name"),map.get("last_name"),map.get("client_name"),map.get("org_name"),map.get("org_id"),map.get("manager_name"),map.get("lead_name"),
+            map.get("pin"),map.get("city"),map.get("country"),map.get("longlong"));
+            columnsList.add(columns);
+        }
+        Rows rowsList = new Rows(columnsList);
+        xStream.toXML(rowsList, streamSource);
         try {
             print(new StreamSource(new ByteArrayInputStream(((ByteArrayOutputStream) streamSource).toByteArray())), pageNumber);  //Invoke print
         } catch (Exception e) {
@@ -61,5 +75,55 @@ public class PdfWriter {
         }
     }
 
+    @Override
+    public void run() {
+        this.print();
+    }
+
+    public void setRows(List<Map<String, Object>> rows) {
+        this.rows = rows;
+    }
+
+    public void setPageNumber(int pageNumber) {
+        this.pageNumber = pageNumber;
+    }
+
+    public static class MapEntryConverter implements Converter {
+
+        public boolean canConvert(Class clazz) {
+            return AbstractMap.class.isAssignableFrom(clazz);
+        }
+
+        public void marshal(Object value, HierarchicalStreamWriter writer, MarshallingContext context) {
+
+            AbstractMap map = (AbstractMap) value;
+            for (Object obj : map.entrySet()) {
+                Map.Entry entry = (Map.Entry) obj;
+                writer.startNode(entry.getKey().toString());
+                Object val = entry.getValue();
+                if ( null != val ) {
+                    writer.setValue(val.toString());
+                }
+                writer.endNode();
+            }
+
+        }
+
+        public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+
+            Map<String, String> map = new HashMap<String, String>();
+
+            while(reader.hasMoreChildren()) {
+                reader.moveDown();
+                String key = reader.getNodeName(); // nodeName aka element's name
+                String value = reader.getValue();
+                map.put(key, value);
+                reader.moveUp();
+            }
+
+            return map;
+        }
+
+    }
 
 }

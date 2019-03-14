@@ -75,7 +75,7 @@
                                 </fo:table-row>
                             </fo:table-header>
                             <fo:table-body>
-                                <xsl:apply-templates select="data/row" />
+                                <xsl:apply-templates select="data.handling.Rows/columnsList/data.handling.Columns" />
                             </fo:table-body>
                         </fo:table>
                     </fo:block>
@@ -83,7 +83,7 @@
             </fo:page-sequence>
         </fo:root>
     </xsl:template>
-    <xsl:template match="data/row">
+    <xsl:template match="data.handling.Rows/columnsList/data.handling.Columns">
         <fo:table-row>
             <fo:table-cell border="solid .5px black"
                            text-align="center" wrap-option="wrap">
@@ -97,7 +97,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="first_name" />
+                        <xsl:value-of select="firstname" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>
@@ -105,7 +105,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="middle_name" />
+                        <xsl:value-of select="middlename" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>
@@ -113,7 +113,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="last_name" />
+                        <xsl:value-of select="lastname" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>
@@ -121,7 +121,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="org_name" />
+                        <xsl:value-of select="orgname" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>
@@ -129,7 +129,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="org_id" />
+                        <xsl:value-of select="orgid" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>
@@ -137,7 +137,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="manager_name" />
+                        <xsl:value-of select="managername" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>
@@ -145,7 +145,7 @@
                            text-align="center" wrap-option="wrap">
                 <fo:block-container overflow="hidden">
                     <fo:block>
-                        <xsl:value-of select="lead_name" />
+                        <xsl:value-of select="leadname" />
                     </fo:block>
                 </fo:block-container>
             </fo:table-cell>

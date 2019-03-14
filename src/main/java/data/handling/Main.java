@@ -19,12 +19,12 @@ import java.util.logging.Logger;
 public class Main {
 
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
-    private static final int PAGE_SIZE = 100;
-    private static int threadCount = 1;
+    private static int FETCH_SIZE = 10000;
+    private static int threadCount = 4;
     private static int pageSize;
     private static final int REC_PER_PAGE = 30;
     private static int pageCount;
-
+    private static int recordsCount;
 
     public static void main(String[] args) throws SQLException, ExecutionException, InterruptedException {
         long startTime = System.nanoTime();
@@ -35,21 +35,23 @@ public class Main {
         List<Future<String>> taskList = new ArrayList<>();
         //CSVWriter csvWriter = new CSVWriter();
         //FIXME  : YYERUVA GIVE ME CORRECT PREFIX AND FOLDER PATH
-        PdfWriter pdfWriter = new PdfWriter("Data","C:\\tmp");
         final Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/test", "postgres", "admin");
-        int recordsCount = getRecordsCount(connection);
-        LOGGER.info("Records Count"+ recordsCount);
+        recordsCount = getRecordsCount(connection);
+        LOGGER.info("Records Count" + recordsCount);
+        int delta = FETCH_SIZE / REC_PER_PAGE;
+        FETCH_SIZE = delta * REC_PER_PAGE;
         //pageCount = (recordsCount/REC_PER_PAGE)+(recordsCount%REC_PER_PAGE);
         //threadCount = (recordsCount/pageCount);
-        LOGGER.info("Computed Thread Count"+ threadCount);
+        LOGGER.info("Computed Thread Count" + threadCount);
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
 
-        submitTask(executor, preparedStatement, taskList, pdfWriter, connection);
+        submitTask(executor, preparedStatement, taskList, connection);
         //waitAndWriteCSVInOrder(taskList);
         // greedyWriteCSV(taskList);
         //FIXME : yyeruva : call merge all the resulted pdf files
-        printEndTiming(startTime);
+        awaitCompletionAll(taskList);
         executor.shutdown();
+        printEndTiming(startTime);
         //connection.close();
     }
 
@@ -99,12 +101,14 @@ public class Main {
     private static void printEndTiming(long startTime) {
         long execEndTime = System.nanoTime();
         long elapsedTimeExec = execEndTime - startTime;
-        LOGGER.info(String.format("Processed time in milliseconds : %d", elapsedTimeExec / 1000000));
+        LOGGER.info("Processed time in seconds : "+ (elapsedTimeExec / 1000000)/1000);
+        LOGGER.info("Processed Records : "+ SQLQuery.count);
     }
 
-    private static void submitTask(ExecutorService executor, String preparedStatement, List<Future<String>> taskList, PdfWriter pdfWriter, Connection connection) throws SQLException {
-        for (int batchNumber = 0; batchNumber < threadCount; batchNumber++) {
-            SQLQuery sqlQuery = new SQLQuery(connection, preparedStatement, pdfWriter,batchNumber, PAGE_SIZE, REC_PER_PAGE,  "ID",
+    private static void submitTask(ExecutorService executor, String preparedStatement, List<Future<String>> taskList, Connection connection) throws SQLException {
+        int maxBatchCount = (recordsCount / FETCH_SIZE) + ((recordsCount % FETCH_SIZE) > 0 ? 1 : 0);
+        for (int batchNumber = 0; batchNumber < maxBatchCount; batchNumber++) {
+            SQLQuery sqlQuery = new SQLQuery(connection, preparedStatement, batchNumber, FETCH_SIZE, REC_PER_PAGE, "ID",
                     "FirstName",
                     "MiddleName",
                     "LastName",
