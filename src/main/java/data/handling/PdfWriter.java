@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 
-public class PdfWriter extends Thread{
+public class PdfWriter implements Runnable{
     private static final Logger LOGGER = Logger.getLogger(PdfWriter.class.getName());
     private final String prefix;
     private final String folderPath;

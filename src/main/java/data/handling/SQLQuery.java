@@ -18,6 +18,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -74,6 +76,7 @@ public class SQLQuery implements Callable<String> {
     }
 
     private void printRecords(ResultSet resultSet) throws SQLException, IOException {
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
         int pageNumber = 0;
         List<Map<String,Object>> rows = new LinkedList<>(); //List of rows
         int rowCounter = 0;
@@ -97,7 +100,8 @@ public class SQLQuery implements Callable<String> {
                 PdfWriter pdfWriter = new PdfWriter("Data", "C:\\tmp");
                 pdfWriter.setPageNumber(pageNumber);
                 pdfWriter.setRows(rows);
-                pdfWriter.start();
+
+                executorService.execute(pdfWriter);
                 rows = new LinkedList<>(); //List of rows
                 pageNumber++;
             }
@@ -106,9 +110,9 @@ public class SQLQuery implements Callable<String> {
             PdfWriter pdfWriter = new PdfWriter("Data", "C:\\tmp");
             pdfWriter.setPageNumber(pageNumber-1);
             pdfWriter.setRows(rows);
-            pdfWriter.start();
+            executorService.execute(pdfWriter);
         }
-
+  executorService.shutdown();
     }
 
 }

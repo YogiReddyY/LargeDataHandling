@@ -22,7 +22,7 @@ public class Main {
     private static int FETCH_SIZE = 10000;
     private static int threadCount = 4;
     private static int pageSize;
-    private static final int REC_PER_PAGE = 30;
+    private static final int REC_PER_PAGE = 100;
     private static int pageCount;
     private static int recordsCount;
 
