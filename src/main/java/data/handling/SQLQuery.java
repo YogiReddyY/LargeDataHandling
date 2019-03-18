@@ -1,18 +1,10 @@
 package data.handling;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,7 +43,7 @@ public class SQLQuery implements Callable<String> {
         try {
             preparedStatement = this.connection.prepareStatement(this.preparedStatementQuery);
             preparedStatement.setInt(1, batchSize);
-            preparedStatement.setInt(2, (batchNumber) * batchSize);
+            preparedStatement.setInt(2, (batchNumber*batchSize));
             preparedStatement.setFetchSize(batchSize);
             resultSet = preparedStatement.executeQuery();
             //csv = csvWriter.format(resultSet, headers);
@@ -76,43 +68,40 @@ public class SQLQuery implements Callable<String> {
     }
 
     private void printRecords(ResultSet resultSet) throws SQLException, IOException {
-        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
         int pageNumber = 0;
-        List<Map<String,Object>> rows = new LinkedList<>(); //List of rows
+        List<Map<String, Object>> rows = new LinkedList<>(); //List of rows
         int rowCounter = 0;
         int columnCount = resultSet.getMetaData().getColumnCount();
-        while(resultSet.next()) {
-            count++;
-            /*List<String> columns = new LinkedList<>();*/  //List Of columns
+        while (resultSet.next()) {
             Map<String, Object> columns = new LinkedHashMap<>();
-            for(int i = 1; i <= columnCount; ++i) {
+            for (int i = 1; i <= columnCount; ++i) {
                 Object obj = resultSet.getObject(i);
-                if(obj == null) {
-                 obj="";
+                if (obj == null) {
+                    obj = "";
                 }
-             CharSequence charSequence = obj instanceof CharSequence?(CharSequence)obj:obj.toString();
+                CharSequence charSequence = obj instanceof CharSequence ? (CharSequence) obj : obj.toString();
                 columns.put(resultSet.getMetaData().getColumnName(i), charSequence.toString());
             }
             rowCounter++;
             rows.add(columns);
-            if(rowCounter == recordsPerPage){
-               rowCounter =0;
-                PdfWriter pdfWriter = new PdfWriter("Data", "C:\\tmp");
+            if (rowCounter == recordsPerPage) {
+                PdfWriter pdfWriter = new PdfWriter("Data", "C:\\tmp\\delete", batchNumber);
+                rowCounter = 0;
                 pdfWriter.setPageNumber(pageNumber);
                 pdfWriter.setRows(rows);
-
                 executorService.execute(pdfWriter);
                 rows = new LinkedList<>(); //List of rows
                 pageNumber++;
             }
         }
-        if(rowCounter < recordsPerPage){
-            PdfWriter pdfWriter = new PdfWriter("Data", "C:\\tmp");
-            pdfWriter.setPageNumber(pageNumber-1);
+        if (rowCounter > 0 && rowCounter < recordsPerPage) {
+            PdfWriter pdfWriter = new PdfWriter("Data", "C:\\tmp\\delete", batchNumber);
+            pdfWriter.setPageNumber(pageNumber);
             pdfWriter.setRows(rows);
             executorService.execute(pdfWriter);
         }
-  executorService.shutdown();
+        executorService.shutdown();
     }
 
 }

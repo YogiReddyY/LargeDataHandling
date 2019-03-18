@@ -21,19 +21,21 @@ public class PdfWriter implements Runnable{
     private static final Logger LOGGER = Logger.getLogger(PdfWriter.class.getName());
     private final String prefix;
     private final String folderPath;
+    private final int batchNumber;
     private List<Map<String, Object>> rows;
     private int pageNumber;
 
-    public PdfWriter(String prefix, String folderPath) {
+    public PdfWriter(String prefix, String folderPath, int batchNumber) {
         this.prefix = prefix;
         this.folderPath = folderPath;
+        this.batchNumber = batchNumber;
     }
 
     private void print(StreamSource xmlSource, int pageNumber) throws Exception {
         File xsltFile = new File("template.xsl");
         FopFactory fopFactory = FopFactory.newInstance(new File(".").toURI());
         FOUserAgent foUserAgent = fopFactory.newFOUserAgent();
-        Fop fop = createfopFactory(fopFactory, foUserAgent, new FileOutputStream(folderPath + File.separator + prefix + pageNumber + ".pdf"));
+        Fop fop = createfopFactory(fopFactory, foUserAgent, new FileOutputStream(folderPath + File.separator + prefix +"_" + batchNumber+"_" + pageNumber + ".pdf"));
 
         Transformer transformer = setUpXSLT(xsltFile);
         Result res = new SAXResult(fop.getDefaultHandler());

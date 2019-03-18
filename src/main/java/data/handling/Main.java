@@ -20,9 +20,9 @@ public class Main {
 
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
     private static int FETCH_SIZE = 10000;
-    private static int threadCount = 4;
+    private static int threadCount = 20;
     private static int pageSize;
-    private static final int REC_PER_PAGE = 100;
+    private static final int REC_PER_PAGE = 30;
     private static int pageCount;
     private static int recordsCount;
 
@@ -107,6 +107,7 @@ public class Main {
 
     private static void submitTask(ExecutorService executor, String preparedStatement, List<Future<String>> taskList, Connection connection) throws SQLException {
         int maxBatchCount = (recordsCount / FETCH_SIZE) + ((recordsCount % FETCH_SIZE) > 0 ? 1 : 0);
+        LOGGER.info("Computed No.of Batches::"+maxBatchCount);
         for (int batchNumber = 0; batchNumber < maxBatchCount; batchNumber++) {
             SQLQuery sqlQuery = new SQLQuery(connection, preparedStatement, batchNumber, FETCH_SIZE, REC_PER_PAGE, "ID",
                     "FirstName",
